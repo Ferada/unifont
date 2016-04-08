@@ -13,15 +13,16 @@
 #
 SHELL = /bin/sh
 INSTALL = install
+GZFLAGS = -f -9 -n
 FONTFORGE = fontforge
 #
 # assembly date of this version
 #
-UNICODE_VERSION = 7.0
-PKG_REV = 03
+UNICODE_VERSION = 8.0
+PKG_REV = 01
 VERSION = $(UNICODE_VERSION).$(PKG_REV)
 
-COPYRIGHT = "Copyright (C) 2014 Roman Czyborra, Paul Hardy, Qianqian Fang, \
+COPYRIGHT = "Copyright (C) 2015 Roman Czyborra, Paul Hardy, Qianqian Fang, \
 Andrew Miller, et al.  \
 Licensed under the GNU General Public License; either version 2, or \
 (at your option) a later version, with the GNU Font Embedding Exception."
@@ -46,9 +47,14 @@ TTFDEST     = $(FONTDEST)/truetype/unifont
 #
 COMPILED_DIR = compiled
 #
-# destination directory for .png representation of font
+# destination directory for .bmp or .png representation of font
 #
+BMPDIR = $(COMPILED_DIR)/bmp
 PNGDIR = $(COMPILED_DIR)/png
+
+# Choose one graphics format or neither.
+GRAPHICS=png
+# GRAPHICS=bmp
 #
 # Directory with original unifont-$(VERSION).hex files
 #
@@ -118,18 +124,19 @@ all: compiled
 compiled: $(UNIFILES) $(COMBINING) $(UPPER_FILES) $(UPPER_COMBINING)
 	$(MAKE) compiled-files
 
-compiled-files: pcf psf png ttf csurttf upperttf uppercsurttf bigpic coverage
+compiled-files: pcf psf $(GRAPHICS) ttf csurttf upperttf uppercsurttf \
+	   bigpic coverage
 	install -p index.html $(COMPILED_DIR)/index.html
 
 #
 # Build the aggregate .hex font files
 #
-hex: distclean
+hex:
 	if [ ! -d $(COMPILED_DIR) ] ; then \
 	   mkdir -p $(COMPILED_DIR) ; \
 	fi
 	sort $(UNIFILES) > $(COMPILED_DIR)/unifont-$(VERSION).hex
-	(cd $(HEXDIR) ; sort *.hex) | \
+	(cd $(HEXDIR) && sort *.hex) | \
 	  egrep -v "^FFF[EF]" | \
 	   $(BINDIR)/unigencircles $(COMBINING) plane00/nonprinting.hex \
 	   > $(COMPILED_DIR)/unifont_sample-$(VERSION).hex
@@ -165,7 +172,7 @@ bdf: hex
 	$(BINDIR)/hex2bdf --version "$(VERSION)" --copyright $(COPYRIGHT) \
 	   $(COMPILED_DIR)/unifont-$(VERSION).hex \
 	   >$(COMPILED_DIR)/unifont-$(VERSION).bdf
-	gzip -f -9 <$(COMPILED_DIR)/unifont-$(VERSION).bdf \
+	gzip $(GZFLAGS) <$(COMPILED_DIR)/unifont-$(VERSION).bdf \
 	           >$(COMPILED_DIR)/unifont-$(VERSION).bdf.gz
 	# Now make a version with combining circles.  The font name
 	# will be "unifont_sample" instead of "unifont" to distinguish
@@ -174,35 +181,35 @@ bdf: hex
 	   --version "$(VERSION)" --copyright $(COPYRIGHT) \
 	     $(COMPILED_DIR)/unifont_sample-$(VERSION).hex \
 	   > $(COMPILED_DIR)/unifont_sample-$(VERSION).bdf
-	gzip -f -9 <$(COMPILED_DIR)/unifont_sample-$(VERSION).bdf \
+	gzip $(GZFLAGS) <$(COMPILED_DIR)/unifont_sample-$(VERSION).bdf \
 	           >$(COMPILED_DIR)/unifont_sample-$(VERSION).bdf.gz
 	# Font with ConScript Unicode Registry (CSUR) glyphs added
 	$(BINDIR)/hex2bdf --font "Unifont CSUR" \
 	   --version "$(VERSION)" --copyright $(COPYRIGHT) \
 	     $(COMPILED_DIR)/unifont_csur-$(VERSION).hex \
 	   > $(COMPILED_DIR)/unifont_csur-$(VERSION).bdf
-	gzip -f -9 <$(COMPILED_DIR)/unifont_csur-$(VERSION).bdf \
+	gzip $(GZFLAGS) <$(COMPILED_DIR)/unifont_csur-$(VERSION).bdf \
 	           >$(COMPILED_DIR)/unifont_csur-$(VERSION).bdf.gz
 	# Font with glyphs above Plane 0
 	$(BINDIR)/hex2bdf --font "Unifont Upper" \
 	   --version "$(VERSION)" --copyright $(COPYRIGHT) \
 	     $(COMPILED_DIR)/unifont_upper-$(VERSION).hex \
 	   > $(COMPILED_DIR)/unifont_upper-$(VERSION).bdf
-	gzip -f -9 <$(COMPILED_DIR)/unifont_upper-$(VERSION).bdf \
+	gzip $(GZFLAGS) <$(COMPILED_DIR)/unifont_upper-$(VERSION).bdf \
 	           >$(COMPILED_DIR)/unifont_upper-$(VERSION).bdf.gz
 	# Font with glyphs above Plane 0 with CSUR glyphs above Plane 0
 	$(BINDIR)/hex2bdf --font "Unifont Upper CSUR" \
 	   --version "$(VERSION)" --copyright $(COPYRIGHT) \
 	     $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).hex \
 	   > $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).bdf
-	gzip -f -9 <$(COMPILED_DIR)/unifont_upper_csur-$(VERSION).bdf \
+	gzip $(GZFLAGS) <$(COMPILED_DIR)/unifont_upper_csur-$(VERSION).bdf \
 	           >$(COMPILED_DIR)/unifont_upper_csur-$(VERSION).bdf.gz
 	# Font with glyphs above Plane 0 with combining circles added
 	$(BINDIR)/hex2bdf --font "Unifont Upper Sample" \
 	   --version "$(VERSION)" --copyright $(COPYRIGHT) \
 	     $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).hex \
 	   > $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).bdf
-	gzip -f -9 <$(COMPILED_DIR)/unifont_upper_sample-$(VERSION).bdf \
+	gzip $(GZFLAGS) <$(COMPILED_DIR)/unifont_upper_sample-$(VERSION).bdf \
 	           >$(COMPILED_DIR)/unifont_upper_sample-$(VERSION).bdf.gz
 
 #
@@ -211,22 +218,26 @@ bdf: hex
 pcf: bdf
 	bdftopcf <$(COMPILED_DIR)/unifont-$(VERSION).bdf \
 	         >$(COMPILED_DIR)/unifont-$(VERSION).pcf
-	gzip -f -9 $(COMPILED_DIR)/unifont-$(VERSION).pcf
+	gzip $(GZFLAGS) $(COMPILED_DIR)/unifont-$(VERSION).pcf
 	bdftopcf <$(COMPILED_DIR)/unifont_sample-$(VERSION).bdf \
 	         >$(COMPILED_DIR)/unifont_sample-$(VERSION).pcf
-	gzip -f -9 $(COMPILED_DIR)/unifont_sample-$(VERSION).pcf
+	gzip $(GZFLAGS) $(COMPILED_DIR)/unifont_sample-$(VERSION).pcf
 	bdftopcf <$(COMPILED_DIR)/unifont_csur-$(VERSION).bdf \
 	         >$(COMPILED_DIR)/unifont_csur-$(VERSION).pcf
-	gzip -f -9 $(COMPILED_DIR)/unifont_csur-$(VERSION).pcf
-	bdftopcf <$(COMPILED_DIR)/unifont_upper-$(VERSION).bdf \
-	         >$(COMPILED_DIR)/unifont_upper-$(VERSION).pcf
-	gzip -f -9 $(COMPILED_DIR)/unifont_upper-$(VERSION).pcf
-	bdftopcf <$(COMPILED_DIR)/unifont_upper_sample-$(VERSION).bdf \
-	         >$(COMPILED_DIR)/unifont_upper_sample-$(VERSION).pcf
-	gzip -f -9 $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).pcf
-	bdftopcf <$(COMPILED_DIR)/unifont_upper_csur-$(VERSION).bdf \
-	         >$(COMPILED_DIR)/unifont_upper_csur-$(VERSION).pcf
-	gzip -f -9 $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).pcf
+	gzip $(GZFLAGS) $(COMPILED_DIR)/unifont_csur-$(VERSION).pcf
+
+
+# The following are removed from the pcf: target, as PCF fonts
+# don't support glyphs above Plane 0.
+#	bdftopcf <$(COMPILED_DIR)/unifont_upper-$(VERSION).bdf \
+#	         >$(COMPILED_DIR)/unifont_upper-$(VERSION).pcf
+#	gzip $(GZFLAGS) $(COMPILED_DIR)/unifont_upper-$(VERSION).pcf
+#	bdftopcf <$(COMPILED_DIR)/unifont_upper_sample-$(VERSION).bdf \
+#	         >$(COMPILED_DIR)/unifont_upper_sample-$(VERSION).pcf
+#	gzip $(GZFLAGS) $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).pcf
+#	bdftopcf <$(COMPILED_DIR)/unifont_upper_csur-$(VERSION).bdf \
+#	         >$(COMPILED_DIR)/unifont_upper_csur-$(VERSION).pcf
+#	gzip $(GZFLAGS) $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).pcf
 
 #
 # Make the PSF (console) font for APL (A Programming Language).
@@ -238,7 +249,7 @@ psf: bdf
 	   psf/unifont-apl.txt \
 	   512 \
 	   $(COMPILED_DIR)/Unifont-APL8x16-$(VERSION).psf
-	gzip -f -9 $(COMPILED_DIR)/Unifont-APL8x16-$(VERSION).psf
+	gzip $(GZFLAGS) $(COMPILED_DIR)/Unifont-APL8x16-$(VERSION).psf
 
 #
 # Print coverage of scripts in Basic Multilingual Plane in .txt file.
@@ -263,6 +274,9 @@ coverage:
 pagecount: $(COMPILED_DIR)/unifont-$(VERSION).hex $(BINDIR)/unipagecount
 	$(BINDIR)/unipagecount -l < $(COMPILED_DIR)/unifont-$(VERSION).hex \
 		        > $(COMPILED_DIR)/pagecount.html
+	if [ x$(GRAPHICS) = xbmp ] ; then \
+	   sed -i 's/png/bmp/g' $(COMPILED_DIR)/plane00.html ; \
+	fi
 
 #
 # Create the .png (Portable Network Graphics) versions of the glyphs.
@@ -284,10 +298,12 @@ png: hex $(BINDIR)/unihex2png
 	if [ ! -d $(PNGDIR)/plane01 ] ; then \
 	   mkdir -p $(PNGDIR)/plane01 ; \
 	fi
+	# Generate files in plane01/all directory to create PNG files.
+	(cd plane01 && make)
 	for i in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
 	   for j in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
 	      $(BINDIR)/unihex2png -p 01$$i$$j \
-	         -i $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).hex \
+	         -i plane01/all/plane01-all.hex \
 	         -o $(PNGDIR)/plane01/uni01$$i$$j.png ; \
 	   done ; \
 	done
@@ -317,7 +333,80 @@ png: hex $(BINDIR)/unihex2png
 	         -o $(PNGDIR)/csur/uni0F$$i$$j.png ; \
 	   done ; \
 	done
+	# Create HTML table showing color-coded percent coverage in Plane 0.
+	$(BINDIR)/unipagecount -h < $(COMPILED_DIR)/unifont-$(VERSION).hex \
+	                          > $(COMPILED_DIR)/plane00.html
+	# Create HTML table showing color-coded percent coverage in Plane 1.
+	../bin/unipagecount -P1 -h < plane01/all/plane01-all.hex \
+	   > compiled/plane01.html
 	echo "Done creating $(PNGDIR)"
+
+
+#
+# Create the .bmp (Bitmap Graphics) versions of the glyphs.
+#
+bmp: hex $(BINDIR)/unihex2bmp
+	if [ ! -d $(BMPDIR) ] ; then \
+	   mkdir -p $(BMPDIR) ; \
+	fi
+	if [ ! -d $(BMPDIR)/plane00 ] ; then \
+	   mkdir -p $(BMPDIR)/plane00 ; \
+	fi
+	for i in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
+	   for j in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
+	      $(BINDIR)/unihex2bmp -p00$$i$$j \
+	         < $(COMPILED_DIR)/unifont_sample-$(VERSION).hex \
+	         > $(BMPDIR)/plane00/uni00$$i$$j.bmp ; \
+	   done ; \
+	done
+	if [ ! -d $(BMPDIR)/plane01 ] ; then \
+	   mkdir -p $(BMPDIR)/plane01 ; \
+	fi
+	# Generate files in plane01/all directory to create PNG files.
+	(cd plane01 && make)
+	for i in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
+	   for j in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
+	      $(BINDIR)/unihex2bmp -p01$$i$$j \
+	         < plane01/all/plane01-all.hex \
+	         > $(BMPDIR)/plane01/uni01$$i$$j.bmp ; \
+	   done ; \
+	done
+	if [ ! -d $(BMPDIR)/plane0E ] ; then \
+	   mkdir -p $(BMPDIR)/plane0E ; \
+	fi
+	for i in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
+	   for j in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
+	      $(BINDIR)/unihex2bmp -p0E$$i$$j \
+	         < $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).hex \
+	         > $(BMPDIR)/plane0E/uni0E$$i$$j.bmp ; \
+	   done ; \
+	done
+	if [ ! -d $(BMPDIR)/csur ] ; then \
+	   mkdir -p $(BMPDIR)/csur ; \
+	fi
+	for i in E0 E1 E2 E3 E4 E5 E6 E7 E8 E9 EA EB EC ED EE EF \
+	         F0 F1 F2 F3 F4 F5 F6 F7 F8 ; do \
+	      $(BINDIR)/unihex2bmp -p00$$i \
+	         < $(COMPILED_DIR)/unifont_csur_sample-$(VERSION).hex \
+	         > $(BMPDIR)/csur/uni00$$i.bmp ; \
+	done
+	for i in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
+	   for j in 0 1 2 3 4 5 6 7 8 9 A B C D E F; do \
+	      $(BINDIR)/unihex2bmp -p0F$$i$$j \
+	         < $(COMPILED_DIR)/unifont_csur_sample-$(VERSION).hex \
+	         > $(BMPDIR)/csur/uni0F$$i$$j.bmp ; \
+	   done ; \
+	done
+	# Create HTML table showing color-coded percent coverage in Plane 0.
+	$(BINDIR)/unipagecount -h < $(COMPILED_DIR)/unifont-$(VERSION).hex \
+	                          > $(COMPILED_DIR)/plane00.html
+	sed -i 's/png/bmp/g' $(COMPILED_DIR)/plane00.html ; \
+	# Create HTML table showing color-coded percent coverage in Plane 01.
+	../bin/unipagecount -P1 -h < plane01/all/plane01-all.hex \
+	   > $(COMPILED_DIR)/plane01.html
+	sed -i 's/png/bmp/g' $(COMPILED_DIR)/plane01.html ; \
+	echo "Done creating $(BMPDIR)"
+
 
 #
 # Build one bitmap of the entire Unifont as a 4096 x 16 grid.
@@ -345,7 +434,7 @@ ttf:
 	install -p \
 		$(HEXDIR)/bmp-combining.txt \
 		$(TTFSRC)/combining.txt
-	cd $(TTFSRC) ; \
+	cd $(TTFSRC) && \
 	   $(MAKE) FONTFILE="unifont" COMBINING="combining" \
 		FONTNAME="Unifont" PSNAME="Unifont"
 	mv $(TTFSRC)/unifont.sfd $(COMPILED_DIR)/unifont-$(VERSION).sfd 
@@ -355,7 +444,7 @@ ttf:
 	install -p \
 		$(COMPILED_DIR)/unifont_sample-$(VERSION).bdf \
 		$(TTFSRC)/unifont_sample.bdf
-	cd $(TTFSRC) ; \
+	cd $(TTFSRC) && \
 	   $(MAKE) sbit FONTFILE="unifont_sample" COMBINING="" \
 		FONTNAME="Unifont Sample" PSNAME="UnifontSample"
 	mv $(TTFSRC)/unifont_sample.ttf \
@@ -370,14 +459,14 @@ csurttf:
 		$(TTFSRC)/unifont_csur.hex
 	sort -u plane00csur/csur-combining.txt $(HEXDIR)/bmp-combining.txt \
 		> $(TTFSRC)/combining_csur.txt
-	cd $(TTFSRC) ; \
+	cd $(TTFSRC) && \
 	   $(MAKE) outline FONTFILE="unifont_csur" COMBINING="combining_csur" \
 		FONTNAME="Unifont CSUR" PSNAME="UnifontCSUR"
 	mv $(TTFSRC)/unifont_csur.sfd \
 		$(COMPILED_DIR)/unifont_csur-$(VERSION).sfd 
 	mv $(TTFSRC)/unifont_csur.ttf \
 		$(COMPILED_DIR)/unifont_csur-$(VERSION).ttf 
-	gzip -f -9 $(COMPILED_DIR)/unifont_csur-$(VERSION).sfd 
+	gzip $(GZFLAGS) $(COMPILED_DIR)/unifont_csur-$(VERSION).sfd 
 
 #
 # Now build the ConScript Unicode Registry PUA font.
@@ -388,19 +477,19 @@ upperttf:
 		$(COMPILED_DIR)/unifont_upper-$(VERSION).hex \
 		$(TTFSRC)/unifont_upper.hex
 	sort -u $(UPPER_COMBINING) > $(TTFSRC)/combining_upper.txt
-	cd $(TTFSRC) ; \
+	cd $(TTFSRC) && \
 	   $(MAKE) outline FONTFILE="unifont_upper" COMBINING="combining_upper" \
 		FONTNAME="Unifont Upper" PSNAME="UnifontUpper"
 	mv $(TTFSRC)/unifont_upper.sfd \
 		$(COMPILED_DIR)/unifont_upper-$(VERSION).sfd 
 	mv $(TTFSRC)/unifont_upper.ttf \
 		$(COMPILED_DIR)/unifont_upper-$(VERSION).ttf 
-	gzip -f -9 $(COMPILED_DIR)/unifont_upper-$(VERSION).sfd 
+	gzip $(GZFLAGS) $(COMPILED_DIR)/unifont_upper-$(VERSION).sfd 
 	# Second, copy unifont_upper_sample.bdf, to make an SBIT font.
 	install -p \
 		$(COMPILED_DIR)/unifont_upper_sample-$(VERSION).bdf \
 		$(TTFSRC)/unifont_upper_sample.bdf
-	cd $(TTFSRC) ; \
+	cd $(TTFSRC) && \
 	   $(MAKE) sbit FONTFILE="unifont_upper_sample" COMBINING="" \
 		FONTNAME="Unifont Upper Sample" PSNAME="UnifontUpperSample"
 	mv $(TTFSRC)/unifont_upper_sample.ttf \
@@ -417,14 +506,14 @@ uppercsurttf:
 		$(TTFSRC)/unifont_upper_csur.hex
 	sort -u plane0[1-F]/*combining*.txt plane0[1-F]csur/*combining*.txt \
 		> $(TTFSRC)/combining_upper_csur.txt
-	cd $(TTFSRC) ; \
+	cd $(TTFSRC) && \
 	   $(MAKE) outline FONTFILE="unifont_upper_csur" COMBINING="combining_upper_csur" \
 		FONTNAME="Unifont Upper CSUR" PSNAME="UnifontUpperCSUR"
 	mv $(TTFSRC)/unifont_upper_csur.sfd \
 		$(COMPILED_DIR)/unifont_upper_csur-$(VERSION).sfd 
 	mv $(TTFSRC)/unifont_upper_csur.ttf \
 		$(COMPILED_DIR)/unifont_upper_csur-$(VERSION).ttf 
-	gzip -f -9 $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).sfd 
+	gzip $(GZFLAGS) $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).sfd 
 
 #
 #
@@ -449,18 +538,21 @@ precompiled: all
 	                  $(COMPILED_DIR)/coverage.txt \
 	                  $(COMPILED_DIR)/unifont-$(VERSION).bmp \
 	                  $(COMPILED_DIR)/unifont_upper-$(VERSION).hex \
-	                  $(COMPILED_DIR)/unifont_upper-$(VERSION).bdf.gz \
-	                  $(COMPILED_DIR)/unifont_upper-$(VERSION).pcf.gz \
 	                  $(COMPILED_DIR)/unifont_upper-$(VERSION).ttf \
 	                  $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).hex \
-	                  $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).bdf.gz \
-	                  $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).pcf.gz \
 	                  $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).ttf \
 	                  $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).hex \
-	                  $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).bdf.gz \
-	                  $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).pcf.gz \
 	                  $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).ttf \
 	   precompiled
+
+# Removed from the "precompiled" target above:
+# $(COMPILED_DIR)/unifont_upper-$(VERSION).bdf.gz \
+# $(COMPILED_DIR)/unifont_upper-$(VERSION).pcf.gz \
+# $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).bdf.gz \
+# $(COMPILED_DIR)/unifont_upper_sample-$(VERSION).pcf.gz \
+# $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).bdf.gz \
+# $(COMPILED_DIR)/unifont_upper_csur-$(VERSION).pcf.gz \
+#
 
 #
 # This is set up for Debian.  Solaris places fonts in
@@ -523,9 +615,11 @@ clean:
 #
 distclean:
 	\rm -rf $(COMPILED_DIR)
+	$(MAKE) -C plane01 distclean
 	$(MAKE) -C ttfsrc distclean
 	\rm -f *~
 	\rm -rf .DS* ._.DS*
 
 .PHONY: all hex bdf pcf coverage pagecount png bigpic csurttf upper ttf \
 	precompiled install clean distclean 
+

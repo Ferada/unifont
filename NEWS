@@ -1,9 +1,72 @@
+2015-06-28: Release 8.0.01
+
+  Updates to support Unicode 8.0.0.
+
+2014-10-23: Release 7.0.06
+
+   A few new scripts were added:
+      U+010350..U+01037F Old Permic
+      U+01F650..U+01F67F Ornamental Dingbats
+      U+01F780..U+01F7FF Geometrical Shapes Extended
+      U+01F800..U+01F8FF Supplemental Arrows-C
+
+   Various changes were made to Makefiles, Perl scripts, and one bash
+   shell script to conform to Debian Policy Manual version 3.9.6.
+
+   Several changes were made to Makefiles:
+      * Use "set -e" at the start of multi-command shell invocations,
+        to trap errors.
+      * Use "&&" rather than ";" in multi-command shell invocations,
+        to fail on errors.
+      * install now uses "-s" flag for C program binaries.
+
+   Other minor changes were made to scripts; see ChangeLog
+   for details.
+
+2014-10-17: Release 7.0.05
+
+   Modified ASCII letter 'l' so it would have the same height as
+   the other lower-case letters with ascenders; this is one pixel
+   taller than the capital letters.  Lowered the horizontal stroke 
+   in 't' by one pixel so it would line up with the horizontal
+   stroke in 'f'; this is one pixel lower than the x-height of
+   the ASCII letters.  Letters elsewhere in Plane 0 that were formed
+   with 'k', 'l', or 't' were checked and modified where appropriate
+   to conform with the new ASCII glyphs.
+
+   Completed the Miscellaneous Symbols and Pictographs script in Plane 1,
+   and modified Plane 1 Emoticons and Transport and Map Symbols scripts.
+
+   Now create file font/compiled/plane01.html, showing a color-coded
+   indication of completion of all of Unicode Plane 1 as an HTML
+   table in a self-contained HTML file.  That and the compiled/index.html
+   are the two HTML files that building the font creates.  The plane01.html
+   file gives a color coding to show completion of each 256-glyph block,
+   from 0% (pure red) to 100% (pure green).
+
+2014-10-11: Release 7.0.04
+
+   Added five more Supplemental Multilingual Plane (Plane 1) scripts
+   and improved others thanks to several contributors.  There are now
+   over 5,000 drawn assigned glyphs for Plane 1!
+
+   Reorganized font/plane01 directory.  Several other changes; see
+   ChangeLog file for details.
+
+   unihex2sfd and unipagecount now handle all Unicode planes, not just
+   Plane 0.
+
+
+2014-07-01: Release 7.0.03
+
+   Minor release for Debian.  Added a man page for unihexfill(1);
+   Debian requires a man page for each program.
+
 2014-06-22: Release 7.0.02
 
    Fixes a bug in font/Makefile: there were two "done" statements at the
    end of one "for" loop.  Also adds many new Supplemental Multilingual
    Plane (Plane 1) scripts.  See the ChangeLog file for details.
-
 
 2014-06-21: Release 7.0.01
 
